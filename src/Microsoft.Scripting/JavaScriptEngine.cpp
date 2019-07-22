@@ -416,41 +416,44 @@ IJavaScriptValue^ JavaScriptEngine::CreateWindowsRuntimeObject(Object^ value)
 
     return converter_->FromWindowsRuntimeObject(value);
 }
-JavaScriptObject^ JavaScriptEngine::CreateExternalObject(Object^ externalData, JavaScriptExternalObjectFinalizeCallback^ finalizer)
+
+JavaScriptObject^ JavaScriptEngine::CreateExternalObject(Object^ externalData)
 {
-    if (externalData != nullptr && finalizer == nullptr)
-        throw ref new NullReferenceException(L"External objects must be paired with a finalizer callback.");
+	ClaimContext();
+	void* optData = reinterpret_cast<void *>(externalData);
+	JsValueRef objRef;
+	auto jsErr = JsCreateExternalObject(optData, nullptr, &objRef);
+	if (jsErr != JsNoError)
+		throw ref new Exception(E_FAIL);
 
-    ClaimContext();
-    void* optData = nullptr;
-    ExternalObjectFinalizeCallbackThunkData^ thunkData = nullptr;
-    if (finalizer != nullptr) 
-    {
-        thunkData = ref new ExternalObjectFinalizeCallbackThunkData(finalizer, this, externalData);
-        optData = reinterpret_cast<void*>(thunkData);
-    }
+	return CreateFirmObjectFromHandle(objRef);
+}
 
-    JsValueRef objRef;
-    auto jsErr = JsCreateExternalObject(optData, JavaScriptEngine::ExternalObjectFinalizeCallbackThunk, &objRef);
-    if (jsErr == JsNoError && optData)
-    {
-        auto punk = reinterpret_cast<IUnknown*>(thunkData);
-        try
-        {
-            finalizers_.insert(punk);
-            // Need to AddRef here to ensure that a hard reference is kept.  CX will
-            // not note the reference count because it only deals with hats, not stars.
-            punk->AddRef();
-        }
-        catch (...)
-        {
-            // finalizers_.insert threw, so no need to release punk.
-            
-            throw ref new OutOfMemoryException();
-        }
-    }
+void JavaScriptEngine::SetExternalData(JavaScriptObject^ object, Object^ externalData) 
+{
+	if (object == nullptr)
+		throw ref new NullReferenceException();
 
-    return CreateFirmObjectFromHandle(objRef);
+	ClaimContext();
+	auto optData = reinterpret_cast<void*>(externalData);
+	JsValueRef objRef = GetHandleFromVar(object);
+	auto jsErr = JsSetExternalData(objRef, optData);
+	if (jsErr != JsNoError)
+		throw ref new Exception(E_FAIL);
+}
+
+Object^ JavaScriptEngine::GetExternalData(JavaScriptObject^ object) 
+{
+	if (object == nullptr)
+		throw ref new NullReferenceException();
+
+	ClaimContext();
+	JsValueRef objRef = GetHandleFromVar(object);
+	void * optData = nullptr;
+	auto jsErr = JsGetExternalData(objRef, &optData);
+	if (jsErr != JsNoError)
+		throw ref new Exception(E_FAIL);
+	return reinterpret_cast<Object ^>(optData);
 }
 
 void JavaScriptEngine::RemoveThunk(ExternalObjectFinalizeCallbackThunkData^ data)

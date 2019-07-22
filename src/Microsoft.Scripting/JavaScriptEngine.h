@@ -218,7 +218,15 @@ namespace Microsoft
                 /// <summary>
                 /// Creates an JavaScript Object that can be associated with a host object.
                 /// </summary>
-                JavaScriptObject^ CreateExternalObject(Object^ externalData, JavaScriptExternalObjectFinalizeCallback^ finalizeCallback);
+				JavaScriptObject^ CreateExternalObject(Object^ externalData);
+				/// <summary>
+				/// Update external data that was associated with a JavaScript object.
+				/// </summary>
+				void SetExternalData(JavaScriptObject^ object, Object^ externalData);
+				/// <summary>
+				/// Retrieve an Object that was associated with a JavaScript object.
+				/// </summary>
+				Object^ GetExternalData(JavaScriptObject^ object);
                 /// <summary>
                 /// Creates an JavaScript Object that can be associated with a host object.
                 /// </summary>

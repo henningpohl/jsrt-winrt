@@ -98,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArrayBufferTests.cs" />
+    <Compile Include="ExternalDataTests.cs" />
     <Compile Include="IBufferByteAccess.cs" />
     <Compile Include="ProjectionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

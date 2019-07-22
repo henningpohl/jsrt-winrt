@@ -28,7 +28,7 @@ ExternalObjectFinalizeCallbackThunkData::ExternalObjectFinalizeCallbackThunkData
     Object^ obj):
         callback_(cb),
         engine_(eng),
-        data_(data)
+        data_(obj)
 {
     
 }
